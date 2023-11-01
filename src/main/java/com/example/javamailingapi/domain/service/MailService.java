@@ -14,7 +14,6 @@ import java.util.Base64;
 
 @Service
 public class MailService {
-
     private static String smtpNaverServer = "smtp.naver.com"; // SMTP 서버 주소
     private static int smtpNaverPort = 587; // SMTP 포트 번호
 
@@ -106,7 +105,9 @@ public class MailService {
                 sendCommand(outputStream, "AUTH LOGIN");
                 response = reader.readLine();
                 System.out.println("response5 = " + response);
+                String log = "";
 
+                log += response;
                 if ("334".equals(response.split(" ")[0])) {
                     System.out.println("base64로 인코딩된 사용자 이름/비밀번호 입력필요");
                 }
