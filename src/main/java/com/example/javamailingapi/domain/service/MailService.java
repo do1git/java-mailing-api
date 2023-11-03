@@ -2,6 +2,7 @@ package com.example.javamailingapi.domain.service;
 
 import com.example.javamailingapi.domain.model.SendRequest;
 import com.example.javamailingapi.domain.model.SendResponse;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,6 +47,26 @@ public class MailService {
         throw new RuntimeException("SMTP서버 소켓연결 오류");
       }
       try {
+        // 파라미터 검사
+        if(Objects.equals(req.getSenderEmail().split("@")[1],"naver.com")){
+          System.out.println("네이버 이메일 인증완료");
+        }else {
+          throw new RuntimeException("네이버 이메일 밖에 지원하지 않습니다.");
+        }
+
+        if (req.getAttachment() != null) {
+          System.out.println("req.getAttachment().getBytes().length = " + req.getAttachment().getSize());
+          if (req.getAttachment().getSize() < 1048576) {
+            System.out.println("첨부파일 탑재완료");
+          } else {
+            System.out.println("첨부가능한 파일 최대 용량은 1Mb입니다.");
+            throw new RuntimeException("첨부가능한 파일 최대 용량은 1Mb입니다.");
+          }
+        }
+      } catch (Exception e) {
+        throw new RuntimeException(e.getMessage());
+      }
+      try {
         // SMTP 서버로부터 환영 메시지 받기
         response = reader.readLine();
         System.out.println("response1 = " + response);
@@ -59,7 +80,7 @@ public class MailService {
       }
       try {
         // HELO 명령어 전송
-        sendCommand(outputStream, "HELO naver");
+        sendCommand(outputStream, "HELO");
         response = reader.readLine();
         System.out.println("response2 = " + response);
         log += String.format("< S: %s >", response);
@@ -147,7 +168,7 @@ public class MailService {
           System.out.println("사용자 인증완료");
         } else if ("535".equals(response.split(" ")[0])) {
           System.out.println("올바른 발신자 이메일/비밀번호를 입력히세요.");
-          throw new RuntimeException("올바른 발신자 이메일/비밀번호를 입력히세요.");
+          throw new RuntimeException("올바른 발신자 이메일/비밀번호를 입력히세요. SMTP허용 여부를 확인해주세요.");
         }
       } catch (Exception e) {
         throw new RuntimeException(e.getMessage());
@@ -174,6 +195,8 @@ public class MailService {
 
         if ("250".equals(response.split(" ")[0])) {
           System.out.println("수신자 이메일 입력완료");
+        }else if ("553".equals(response.split(" ")[0])) {
+          throw new RuntimeException("수신자 이메일이 유효하지 않습니다.");
         }
       } catch (Exception e) {
         throw new RuntimeException(e.getMessage());
