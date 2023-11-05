@@ -16,8 +16,8 @@ import java.util.Base64;
 @Service
 public class MailService {
 
-  private static String smtpNaverServer = "smtp.naver.com"; // SMTP 서버 주소
-  private static int smtpNaverPort = 587; // SMTP 포트 번호
+  private static String SMTP_NAVER_SERVER = "smtp.naver.com"; // SMTP 서버 주소
+  private static int SMTP_NAVER_PORT = 587; // SMTP 포트 번호
   private static String log = "";
 
   // SMTP 명령어를 전송하는 메서드
@@ -39,18 +39,10 @@ public class MailService {
       String response = null;
 
       try {
-        // SMTP 서버에 연결
-        socket = new Socket(smtpNaverServer, smtpNaverPort);
-        reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        outputStream = socket.getOutputStream();
-      } catch (Exception e) {
-        throw new RuntimeException("SMTP서버 소켓연결 오류");
-      }
-      try {
         // 파라미터 검사
-        if(Objects.equals(req.getSenderEmail().split("@")[1],"naver.com")){
+        if (Objects.equals(req.getSenderEmail().split("@")[1], "naver.com")) {
           System.out.println("네이버 이메일 인증완료");
-        }else {
+        } else {
           throw new RuntimeException("네이버 이메일 밖에 지원하지 않습니다.");
         }
 
@@ -65,6 +57,14 @@ public class MailService {
         }
       } catch (Exception e) {
         throw new RuntimeException(e.getMessage());
+      }
+      try {
+        // SMTP 서버에 연결
+        socket = new Socket(SMTP_NAVER_SERVER, SMTP_NAVER_PORT);
+        reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        outputStream = socket.getOutputStream();
+      } catch (Exception e) {
+        throw new RuntimeException("SMTP서버 소켓연결 오류");
       }
       try {
         // SMTP 서버로부터 환영 메시지 받기
@@ -195,7 +195,7 @@ public class MailService {
 
         if ("250".equals(response.split(" ")[0])) {
           System.out.println("수신자 이메일 입력완료");
-        }else if ("553".equals(response.split(" ")[0])) {
+        } else if ("553".equals(response.split(" ")[0])) {
           throw new RuntimeException("수신자 이메일이 유효하지 않습니다.");
         }
       } catch (Exception e) {
@@ -283,6 +283,7 @@ public class MailService {
       }
 
     } catch (Exception e) {
+      result.setStatus(400);
       result.setMessage(e.getMessage());
     }
 
