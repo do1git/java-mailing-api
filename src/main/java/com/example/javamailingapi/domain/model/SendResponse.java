@@ -14,8 +14,4 @@ public class SendResponse {
   @ApiModelProperty(notes = "메세지")
   private String message;
 
-    @ApiModelProperty(notes = "로그")
-  private String log;
-
-
 }
