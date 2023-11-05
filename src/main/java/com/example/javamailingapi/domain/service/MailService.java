@@ -16,15 +16,17 @@
   @Service
   public class MailService {
 
-    private static String smtpNaverServer = "smtp.naver.com"; // SMTP 서버 주소
-    private static int smtpNaverPort = 587; // SMTP 포트 번호
+    private static String SMTP_NAVER_SERVER = "smtp.naver.com"; // SMTP 서버 주소
+    private static int SMTP_NAVER_PORT = 587; // SMTP 포트 번호
 
+    private static String log = "";
     private static String boundary = "----=_NextPart_" + System.currentTimeMillis();
 
     private static void readAllLines(BufferedReader reader) throws IOException {
       String line;
       while ((line = reader.readLine()) != null) {
         System.out.println("Server: " + line);
+        log += String.format("< Server: %s >", line);
         if (!line.startsWith("250-")) {
           break;
         }
@@ -36,6 +38,7 @@
       command += "\r\n"; // 명령어 끝에 CRLF(Carriage Return, Line Feed) 추가
       outputStream.write(command.getBytes());
       outputStream.flush();
+      log += String.format("< Client: %s >", command);
       System.out.print("Client: " + command);
     }
 
@@ -49,19 +52,12 @@
         String response = null;
 
         try {
-          // SMTP 서버에 연결
-          socket = new Socket(smtpNaverServer, smtpNaverPort);
-          reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-          outputStream = socket.getOutputStream();
-        } catch (Exception e) {
-          throw new RuntimeException("SMTP Server Socket Connection Error");
-        }
-        try {
           // 파라미터 검사
-          if(Objects.equals(req.getSenderEmail().split("@")[1],"naver.com")){
-            System.out.println("Naver Email Authentication Complete");
-          }else {
-            throw new RuntimeException("We only support Naver Mail");
+          if (Objects.equals(req.getSenderEmail().split("@")[1], "naver.com")) {
+            System.out.println("Naver Email Connected");
+          }  else {
+            System.out.println("Unknown Email Connected");
+            throw new RuntimeException("Unsupported EMAIL");
           }
 
           if (req.getAttachment() != null) {
@@ -75,6 +71,14 @@
           }
         } catch (Exception e) {
           throw new RuntimeException(e.getMessage());
+        }
+        try {
+          // SMTP 서버에 연결
+          socket = new Socket(SMTP_NAVER_SERVER, SMTP_NAVER_PORT);
+          reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+          outputStream = socket.getOutputStream();
+        } catch (Exception e) {
+          throw new RuntimeException("SMTP Server Socket Connection Error");
         }
         try {
           // SMTP 서버로부터 환영 메시지 받기
@@ -272,9 +276,11 @@
         }
 
       } catch (Exception e) {
+        result.setStatus(400);
         result.setMessage(e.getMessage());
       }
 
+      result.setLog(log);
       return result;
     }
 
